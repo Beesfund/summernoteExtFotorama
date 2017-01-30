@@ -9,8 +9,11 @@ Setup:
 3. Add 'fotorama' plugin to summernote toolbar.
 
 Code example:
+```html
 <script src="project_directory/js/summernote-ext-fotorama.js" type="text/javascript"></script>
 <script src="project_directory/js/bootstrap.min.js" type="text/javascript"></script>
+```
+```javascript
 $('.summernote').summernote({
       toolbar: [
           ['headline', ['style']],
@@ -38,3 +41,4 @@ $('.summernote').summernote({
 				}
 			}
 		});
+```
