@@ -587,6 +587,7 @@
       self.imageCaptions = [];
       self.customCode = {};
       self.dataAuto = false;
+      self.contentEditable = false;
       self.attr = {
           'class': 'fotorama',
           'data-width': 600,
@@ -630,6 +631,7 @@
           });
 
           $div.attr('data-auto', self.dataAuto);
+          $div.attr('contenteditable', self.contentEditable);
 
           return $div;
       };
