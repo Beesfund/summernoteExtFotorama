@@ -26,7 +26,7 @@
     var $editor = context.layoutInfo.editor;
     var lang = options.langInfo;
     var cssRules = '\
-      .note-editable .fotorama__wrap * {\
+      .note-editable .fotorama * {\
         pointer-events: none;\
       }\
       .note-editable .fotorama {\
@@ -52,7 +52,7 @@
         var button = ui.button({
             contents: '<i class="fa"/><span class="glyphicon glyphicon-camera"></span>',
             tooltip: lang.fotorama.tooltip,
-            click: function(e) {
+            click: function() {
                 self.addGallery();
             }
         });
@@ -62,10 +62,9 @@
     // This events will be attached when editor is initialized.
     this.events = {
       // This will be called after modules are initialized.
-      'summernote.init': function (we, e) {
-        console.log('summernote initialized', we, e);
+      'summernote.init': function () {
         self.initializeGalleries();
-      },
+      }
     };
 
     this.initialize = function() {
@@ -99,7 +98,7 @@
         self.$dialog = ui.dialog(fotoramaMainDialogConfig).render().appendTo($fotoramaContainer);
         self.$dialog.css({
             'z-index': '2000',
-            'height': '100%',
+            'height': '100%'
         });
         self.$removeBtn = self.$dialog.find('#btn-remove');
         self.$optionsBtn = self.$dialog.find('#btn-options');
@@ -188,7 +187,6 @@
                         }
                         $(this).val('');
                     })
-                    //.val('')
                 );
                 self.$removeBtn.click(function(event) {
                     event.preventDefault();
@@ -228,7 +226,7 @@
         var gallery = new Gallery();
 
         self.showFotoramaDialog(gallery, true)
-            .then(function(data) {
+            .then(function() {
                 context.invoke('editor.restoreRange');
 
                 //insert new gallery
@@ -245,7 +243,7 @@
     };
 
     this.editGallery = function(galleryIndex) {
-        var $gallery = this.getRawGalleries().eq(galleryIndex);
+        var $gallery = this.getEditorGalleries().eq(galleryIndex);
         var gallery = new Gallery($gallery);
 
         self.showFotoramaDialog(gallery, false)
@@ -255,12 +253,6 @@
                 if(typeof data != 'undefined' && data.remove == true) {
                     //remove gallery in editor
                     self.getEditorGalleries().eq(galleryIndex).remove();
-                    
-                    //remove gallery in summernote text area
-                    var $summernote = $editor.parent().find('.summernote');
-                    var $content = $('<div>').append($.parseHTML($summernote.val()));
-                    $content.find('.fotorama').eq(galleryIndex).remove();
-                    $summernote.val($content.html());
                 
                 } else if(gallery.images.length > 0) {
                     var $newGallery = self.gallery.parseToJQuery();
@@ -269,13 +261,6 @@
                     //replace gallery in editor
                     var $editorGallery = self.getEditorGalleries().eq(galleryIndex);
                     $editorGallery.replaceWith($newGallery);
-
-                    //replace gallery in summernote text area
-                    var $summernote = $editor.parent().find('.summernote');
-                    var $content = $('<div>').append($.parseHTML($summernote.val()));
-                    var galleryToReplace = $content.find('.fotorama').eq(galleryIndex);
-                    galleryToReplace.replaceWith($newGallery.clone());
-                    $summernote.val($content.html());
                 }
 
                 ui.hideDialog(self.$dialog);
@@ -333,8 +318,7 @@
             self.$saveCaptionBtn.click(function(event) {
                 event.preventDefault();
 
-                if(self.$captionInput.val())
-                    self.gallery.imageCaptions[index] = self.$captionInput.val();
+                self.gallery.imageCaptions[index] = self.$captionInput.val();
 
                 ui.hideDialog(self.$captionDialog);
             });
@@ -355,13 +339,14 @@
             var galleries = self.getEditorGalleries();
             var index = galleries.index(this);
             self.editGallery(index);
+            return false;
         });
     };
 
     this.clearDialog = function() {
         self.$imgPreviewList.empty();
         self.unsetOptionRadioInputs();
-    }
+    };
 
     this.addImageToGallery = function(gallery, imageUrl) {
         gallery.images.push(imageUrl);
@@ -446,11 +431,11 @@
 
     this.setOptionRadioInput = function(attr, value) {
         self.getOptionRadioInput(attr, value).prop('checked', true).parent().addClass('active');
-    }
+    };
 
     this.unsetOptionRadioInputs = function() {
         self.getOptionRadioInputs().prop('checked', false).parent().removeClass('active');
-    }
+    };
 
     /********************     HTML FUNCTIONS     ********************/
 
@@ -486,7 +471,7 @@
                     '</div>'
         };
         return dialogConfig;
-    }
+    };
 
     this.getFotoramaOptionsDialogConfig = function() {
         var optionsDialogConfig = {
@@ -543,7 +528,7 @@
             footer: '<button href="#" id="btn-save-options" class="btn btn-primary pull-right">' + lang.dialog.saveOptionsButton + '</button>'
         };
         return optionsDialogConfig;
-    }
+    };
 
     this.getFotoramaCaptionDialogConfig = function() {
         var captionDialogConfig = {
@@ -565,7 +550,7 @@
                   '</div>'
         };
         return captionDialogConfig;
-    }
+    };
 
     this.createInput = function(option, label, addon, tooltip, placeholder, style) {
         return '<div class="form-group"' + (tooltip ? ' data-toggle="tooltip" title="'+tooltip+'"' : '') + (style ? ' style="'+style+'"' : '') +'>' +
@@ -587,7 +572,7 @@
             html += '<label class="btn option-radio btn-default btn-sm"' + (tooltips && tooltips[i] ? ' data-toggle="tooltip" title="'+tooltips[i]+'"' : '') +' style="width: ' + width + '">' +
                         '<input type="radio" name="option-'+option+'" value="'+values[i]+'">'+labels[i]+
                     '</label>';
-        };
+        }
         html += '</div></div></div>';
         return html;
     };
@@ -601,6 +586,7 @@
       self.images = [];
       self.imageCaptions = [];
       self.customCode = {};
+      self.dataAuto = false;
       self.attr = {
           'class': 'fotorama',
           'data-width': 600,
@@ -619,8 +605,8 @@
       //initialize gallery
       if(jQueryObject) {
           jQueryObject.find('img').each(function(index) {
-              self.images.push($(this).attr('src'));
-              self.imageCaptions.push($(this).attr('data-caption'));
+              self.images[index] = $(this).attr('src');
+              self.imageCaptions[index] = $(this).attr('data-caption');
           });
 
           $.each(jQueryObject[0].attributes, function() {
@@ -643,6 +629,8 @@
               $div.attr(key, value);
           });
 
+          $div.attr('data-auto', self.dataAuto);
+
           return $div;
       };
 
@@ -655,8 +643,6 @@
               for(var i = indexFrom; i > indexTo; i--) {
                   self.shiftImageLeft(i);
               }
-          } else {
-              return;
           }
       };
 
@@ -664,13 +650,13 @@
           if(index == 0)
               return;
           self.swapImages(index, parseInt(index)-1);
-      }
+      };
 
       this.shiftImageRight = function(index) {
           if(index == this.images.length-1)
               return;
           self.swapImages(index, parseInt(index)+1);
-      }
+      };
 
       this.swapImages = function(index1, index2) {
           if(index1 == index2)
@@ -809,3 +795,4 @@
     }
   });
 }));
+
