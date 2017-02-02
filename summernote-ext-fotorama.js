@@ -80,8 +80,12 @@
     this.initializeGalleries = function() {
         $('<style>').prop('type', 'text/css').html(cssRules).appendTo('head');
 
-        self.getEditorGalleries().each(function(index) {
-            $(this).initializeGallery();
+        $editor.on('click', '.fotorama', function(event) {
+            event.preventDefault();
+            var galleries = self.getEditorGalleries();
+            var index = galleries.index(this);
+            self.editGallery(index);
+            return false;
         });
     };
 
@@ -232,7 +236,6 @@
                 //insert new gallery
                 if(gallery.images.length > 0) {
                     var $gallery = gallery.parseToJQuery();
-                    $gallery.initializeGallery();
                     context.invoke('editor.insertNode', $gallery[0]);
                 }
 
@@ -256,7 +259,6 @@
                 
                 } else if(gallery.images.length > 0) {
                     var $newGallery = self.gallery.parseToJQuery();
-                    $newGallery.initializeGallery();
 
                     //replace gallery in editor
                     var $editorGallery = self.getEditorGalleries().eq(galleryIndex);
@@ -332,16 +334,6 @@
     };
 
     /********************     ACTION FUNCTIONS     ********************/
-
-    $.fn.initializeGallery = function() {
-        $(this).on('click', function(event) {
-            event.preventDefault();
-            var galleries = self.getEditorGalleries();
-            var index = galleries.index(this);
-            self.editGallery(index);
-            return false;
-        });
-    };
 
     this.clearDialog = function() {
         self.$imgPreviewList.empty();
@@ -769,8 +761,8 @@
                 transitionDissolve: 'Rozpływanie',
                 autoplay: 'Autoodtwarzanie',
                 allowfullscreen: 'Pełny ekran',
-                allowfullscreenFalse: 'Włączony',
-                allowfullscreenTrue: 'Wyłączony',
+                allowfullscreenFalse: 'Wyłączony',
+                allowfullscreenTrue: 'Włączony',
                 allowfullscreenNative: 'Wbudowany',
                 captions: 'Podpisy',
                 captionsOn: 'Włączone',
